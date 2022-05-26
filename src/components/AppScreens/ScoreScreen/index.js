@@ -5,6 +5,7 @@ import shopbtn from 'contents/images/buttons/shopbtn.png';
 import sharebtn from 'contents/images/buttons/sharebtn.png';
 import replaybtn from 'contents/images/buttons/replaybtn.png';
 import LoadingScreen from 'components/AppScreens/LoadingScreen';
+import axios from 'axios';
 export default class ScoreScreen extends Component {
   constructor(props) {
     super(props);
@@ -21,7 +22,7 @@ export default class ScoreScreen extends Component {
             <tr key={item.id}>
               <td>{item.rank}</td>
               <td>{item.name}</td>
-              <td>{Number(item.totalScore.toFixed(1))}</td>
+              <td>{item.score}</td>
             </tr>
           )}
         </tbody>
@@ -77,10 +78,19 @@ export default class ScoreScreen extends Component {
 
   async fetchData() {
     try {
-      const response = await fetch('leaderBoard'); // gọi api lên controller để lấy data
-      const data = await response.json();
-      console.log(data);
-      this.setState({ items: data, loading: false });
+      // const response = await fetch('leaderBoard'); // gọi api lên controller để lấy data
+      // const data = await response.json();
+      // console.log(data);
+      const response = await axios({
+        method: 'get',
+        url: '/leaderBoard'
+      }).then((response) =>{
+        return response.data
+      }).catch((err) =>{
+        return []
+      })
+      console.log(response)
+      this.setState({ items: response, loading: false });
     }
     catch (e) {
       console.log(e);

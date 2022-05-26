@@ -5,6 +5,7 @@ import jokerimg from "contents/images/game/joker.png";
 import jokerimgUp from "contents/images/game/joker-up.png";
 import { Progress } from "react-sweet-progress";
 import "react-sweet-progress/lib/style.css";
+import axios from "axios";
 export default class GameScreen extends Component {
   constructor(props) {
     super(props);
@@ -27,19 +28,23 @@ export default class GameScreen extends Component {
     };
   }
   async componentDidMount() {
-    const response = await fetch("question/get");
+    const response = await fetch("/getquestion");
     const data = await response.json();
     if (data != null && data.characters != null) {
       var length = data.characters.length;
-      var nextQuestion = length > 0 ? data.characters[0].question : null;
+      var nextQuestion = length > 0 ? data.characters[0] : null;
       let _dialogText = "";
       let _questionText = "";
       let _infoText = "";
+      //console.log(data);
       if (nextQuestion != null) {
-        _dialogText = nextQuestion.description;
-        _questionText = nextQuestion.content;
+        console.log(1)
+        _dialogText = nextQuestion.dialog;
+        _questionText = nextQuestion.question;
         _infoText = nextQuestion.info;
+        console.log(_dialogText)
       }
+      //console.log(data);
       //console.log(data);
       this.setState({
         maxPoint: data.qMaxPoint,
@@ -52,6 +57,7 @@ export default class GameScreen extends Component {
         infoText: _infoText,
         isLoading: false,
       });
+      //console.log(data);
     }
   }
   onShowHelpText = () => {
@@ -65,17 +71,32 @@ export default class GameScreen extends Component {
       var name = this.state.userName;
       if (name != null && name != "") {
         var data = {
-          userFullName: name,
-          answers: this.state.answers,
+          user: name,
+          score: this.state.yourPoint,
         };
-        await fetch("question/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
+        //const stringify = JSON.stringify(data)
+        // const result = await fetch("/submit", {
+        //   method: "POST",
+        //   //headers: { "Content-Type": "application/json" },
+        //   body: {
+        //     ...data
+        //   }
+        // });
+        var result = await axios({
+          method: "post",
+          url: '/submit',
+          data: {
+            data: JSON.stringify(data)
+          }
+        }).then((response) =>{
+          return response.data
+        }).catch((err) =>{
+          return null
+        })
+        //alert(result)
       }
       this.setState({ isLoading: false, submitting: false });
-      this.props.history.push("/score");
+      if (result) {this.props.history.push("/score");}
     }
   };
   render() {
@@ -108,28 +129,38 @@ export default class GameScreen extends Component {
           questionId: question.id,
           selection: selection,
         });
+        console.log('_answer', _answers)
       }
       var myPoint = 0;
       var questions = this.state.gameSession;
+      console.log('questions', questions)
       //console.log("questions", questions)
       _answers.map((answer, index) => {
         var index = questions.findIndex(
-          (f) => f.question.id === answer.questionId
+          (f) => f.id === answer.questionId
         );
+        questions.forEach((e) => {
+          console.log(e)
+        })
+        //console.log("1sda", index)
         if (index >= 0) {
-          var qInfo = questions[index].question;
+          var qInfo = questions[index];
+          console.log(answer.selection)
           myPoint +=
-            qInfo.isCorrect == answer.selection
-              ? qInfo.point
-              : qInfo.inCorrectPoint;
+             answer.selection
+              ? qInfo.yes
+              : qInfo.no;
+              console.log("=>", qInfo)
+          console.log(myPoint)
         }
+        
       });
       let _dialogText = "";
       let _questionText = "";
       let _infoText = "";
       if (nextQuestion != null) {
-        _dialogText = nextQuestion.description;
-        _questionText = nextQuestion.content;
+        _dialogText = nextQuestion.dialog;
+        _questionText = nextQuestion.question;
         _infoText = nextQuestion.info;
       }
       let isFinish = _answers.length == this.state.qLength;
@@ -178,13 +209,13 @@ export default class GameScreen extends Component {
                     var length = this.state.gameSession.length;
                     var nextQuestion =
                       index + 1 <= length - 1
-                        ? this.state.gameSession[index + 1].question
+                        ? this.state.gameSession[index + 1]
                         : null;
                     return (
                       <TinderCard
                         key={index}
                         onSwipe={(direction) =>
-                          onSwipe(direction, item.question, nextQuestion)
+                          onSwipe(direction, item, nextQuestion)
                         }
                         preventSwipe={["up", "down"]}
                         className="sas__gameitem"
