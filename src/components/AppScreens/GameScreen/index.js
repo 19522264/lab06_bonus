@@ -28,8 +28,17 @@ export default class GameScreen extends Component {
     };
   }
   async componentDidMount() {
-    const response = await fetch("/getquestion");
-    const data = await response.json();
+    // const response = await fetch("https://lab06nhom02.herokuapp.com/getquestion");
+    // const data = await response.json();
+    const data = await axios({
+      method: 'get',
+      url: "https://lab06nhom02.herokuapp.com/getquestion",
+    }).then((response) =>{
+      return response.data
+    }).catch((err) =>{
+      console.log(err)
+      return []
+    })
     if (data != null && data.characters != null) {
       var length = data.characters.length;
       var nextQuestion = length > 0 ? data.characters[0] : null;
@@ -84,7 +93,7 @@ export default class GameScreen extends Component {
         // });
         var result = await axios({
           method: "post",
-          url: '/submit',
+          url: 'https://lab06nhom02.herokuapp.com/submit',
           data: {
             data: JSON.stringify(data)
           }

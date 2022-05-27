@@ -83,10 +83,12 @@ export default class ScoreScreen extends Component {
       // console.log(data);
       const response = await axios({
         method: 'get',
-        url: '/leaderBoard'
+        url: 'https://lab06nhom02.herokuapp.com/leaderBoard',
+        
       }).then((response) =>{
         return response.data
       }).catch((err) =>{
+        console.log(err)
         return []
       })
       console.log(response)
